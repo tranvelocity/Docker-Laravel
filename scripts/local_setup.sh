@@ -2,7 +2,7 @@
 
 set -eu
 
-URL=local.mylaravel.vn
+URL=local.chalashop.vn
 
 cp .env.dev .env
 

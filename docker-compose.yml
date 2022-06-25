@@ -10,7 +10,7 @@ services:
             context: ./
             dockerfile: Dockerfile
         image: ${PHP_IMAGE}
-        container_name: app
+        container_name: ${PROJECT_NAME}_app
         restart: unless-stopped
         tty: true
         working_dir: /var/www
@@ -24,11 +24,11 @@ services:
 
     mysql:
         image: ${MYSQL_IMAGE}
-        container_name: mysql
+        container_name: ${PROJECT_NAME}_mysql
         restart: unless-stopped
         tty: true
         ports:
-          - 3306
+          - 3306:3306
         environment:
             MYSQL_DATABASE: ${MYSQL_DATABASE}
             MYSQL_USER: ${MYSQL_USER}
@@ -43,7 +43,7 @@ services:
 
     nginx:
         image: ${NGINX_IMAGE}
-        container_name: nginx
+        container_name: ${PROJECT_NAME}_nginx
         restart: unless-stopped
         tty: true
         ports:
@@ -57,7 +57,7 @@ services:
 
     redis:
         image: ${REDIS_IMAGE}
-        container_name: redis
+        container_name: ${PROJECT_NAME}_redis
         restart: unless-stopped
         tty: true
         volumes:
@@ -67,7 +67,7 @@ services:
 
     phpmyadmin:
         image: ${PHPMYADMIN_IMAGE}
-        container_name: phpmyadmin
+        container_name: ${PROJECT_NAME}_phpmyadmin
         restart: unless-stopped
         ports:
             - 8200:80
