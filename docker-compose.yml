@@ -1,121 +1,74 @@
-version: '3'
+version: "3.7"
 
 networks:
-  laravel:
+    app-network:
+        driver: bridge
 
 services:
-  site:
-    build:
-      context: ./dockerfiles
-      dockerfile: nginx.dockerfile
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-    container_name: nginx
-    ports:
-      - 80:80
-    volumes:
-      - ./src:/var/www/html:delegated
-    depends_on:
-      - php
-      - redis
-      - mysql
-      - mailhog
-    networks:
-      - laravel
+    app:
+        build:
+            context: ./
+            dockerfile: Dockerfile
+        image: laravel8-php-fpm-80
+        container_name: app
+        restart: unless-stopped
+        tty: true
+        working_dir: /var/www
+        volumes:
+            - ./src:/var/www
+        networks:
+            - app-network
 
-  mysql:
-    image: mariadb:10.6
-    container_name: mysql
-    restart: unless-stopped
-    tty: true
-    ports:
-      - 3306:3306
-    environment:
-      MYSQL_DATABASE: homestead
-      MYSQL_USER: homestead
-      MYSQL_PASSWORD: secret
-      MYSQL_ROOT_PASSWORD: secret
-      SERVICE_TAGS: dev
-      SERVICE_NAME: mysql
-    networks:
-      - laravel
+    mysql:
+        image: mysql:5.7.33
+        container_name: mysql
+        restart: unless-stopped
+        tty: true
+        environment:
+            MYSQL_DATABASE: laravel8
+            MYSQL_ROOT_PASSWORD: 123456
+            MYSQL_PASSWORD: 123456
+            MYSQL_USER: laravel8
+            SERVICE_TAGS: dev
+            SERVICE_NAME: mysql
+        volumes:
+            - ./mysql/data:/var/lib/mysql
+        networks:
+            - app-network
 
-  php:
-    build:
-      context: ./dockerfiles
-      dockerfile: php.dockerfile
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-    container_name: php
-    volumes:
-      - ./src:/var/www/html:delegated
-    networks:
-      - laravel
+    nginx:
+        image: nginx:1.19.8-alpine
+        container_name: nginx
+        restart: unless-stopped
+        tty: true
+        ports:
+            - 8100:80
+        volumes:
+            - ./src:/var/www
+            - ./nginx/conf:/etc/nginx/conf.d
+        networks:
+            - app-network
 
-  redis:
-    image: redis:alpine
-    container_name: redis
-    restart: unless-stopped
-    ports:
-      - 6379:6379
-    networks:
-      - laravel
+    redis:
+        image: redis:6.2.1-buster
+        container_name: redis
+        restart: unless-stopped
+        tty: true
+        volumes:
+            - ./redis/data:/data
+        networks:
+            - app-network
 
-  composer:
-    build:
-      context: ./dockerfiles
-      dockerfile: composer.dockerfile
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-    container_name: composer
-    volumes:
-      - ./src:/var/www/html
-    working_dir: /var/www/html
-    depends_on:
-      - php
-    user: laravel
-    entrypoint: ['composer', '--ignore-platform-reqs']
-    networks:
-      - laravel
-
-  npm:
-    image: node:13.7
-    container_name: npm
-    volumes:
-      - ./src:/var/www/html
-    ports:
-      - 3000:3000
-      - 3001:3001
-    working_dir: /var/www/html
-    entrypoint: ['npm']
-    networks:
-      - laravel
-
-  artisan:
-    build:
-      context: ./dockerfiles
-      dockerfile: php.dockerfile
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-    container_name: artisan
-    volumes:
-      - ./src:/var/www/html:delegated
-    depends_on:
-      - mysql
-    working_dir: /var/www/html
-    entrypoint: ['php', '/var/www/html/artisan']
-    networks:
-      - laravel
-
-  mailhog:
-    image: mailhog/mailhog:latest
-    container_name: mailhog
-    ports:
-      - 1025:1025
-      - 8025:8025
-    networks:
-      - laravel
+    phpmyadmin:
+        image: phpmyadmin:5.1.0-apache
+        container_name: phpmyadmin
+        restart: unless-stopped
+        ports:
+            - 8200:80
+        environment:
+            PMA_HOST: mysql
+            PMA_PORT: 3306
+            PMA_USER: laravel8
+            PMA_PASSWORD: 123456
+        networks:
+            - app-network
