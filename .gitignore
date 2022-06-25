@@ -5,6 +5,7 @@ redis/data/*
 
 /src/storage/files
 /src/storage/temp
+/src/.github
 src/Modules/.php-cs-fixer.cache
 src/Modules/*/*.php-cs-fixer.cache
 

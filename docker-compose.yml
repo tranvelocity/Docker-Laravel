@@ -9,7 +9,7 @@ services:
         build:
             context: ./
             dockerfile: Dockerfile
-        image: laravel8-php-fpm-80
+        image: ${PHP_IMAGE}
         container_name: app
         restart: unless-stopped
         tty: true
@@ -18,17 +18,22 @@ services:
             - ./src:/var/www
         networks:
             - app-network
+        environment:
+          SERVER_NAME: ${SERVER_NAME}
+          SSL: "true"
 
     mysql:
-        image: mysql:5.7.33
+        image: ${MYSQL_IMAGE}
         container_name: mysql
         restart: unless-stopped
         tty: true
+        ports:
+          - 3306
         environment:
-            MYSQL_DATABASE: laravel8
-            MYSQL_ROOT_PASSWORD: 123456
-            MYSQL_PASSWORD: 123456
-            MYSQL_USER: laravel8
+            MYSQL_DATABASE: ${MYSQL_DATABASE}
+            MYSQL_USER: ${MYSQL_USER}
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
             SERVICE_TAGS: dev
             SERVICE_NAME: mysql
         volumes:
@@ -37,12 +42,13 @@ services:
             - app-network
 
     nginx:
-        image: nginx:1.19.8-alpine
+        image: ${NGINX_IMAGE}
         container_name: nginx
         restart: unless-stopped
         tty: true
         ports:
-            - 8100:80
+          - 80:80
+          - 443:443
         volumes:
             - ./src:/var/www
             - ./nginx/conf:/etc/nginx/conf.d
@@ -50,7 +56,7 @@ services:
             - app-network
 
     redis:
-        image: redis:6.2.1-buster
+        image: ${REDIS_IMAGE}
         container_name: redis
         restart: unless-stopped
         tty: true
@@ -60,7 +66,7 @@ services:
             - app-network
 
     phpmyadmin:
-        image: phpmyadmin:5.1.0-apache
+        image: ${PHPMYADMIN_IMAGE}
         container_name: phpmyadmin
         restart: unless-stopped
         ports:
@@ -68,7 +74,7 @@ services:
         environment:
             PMA_HOST: mysql
             PMA_PORT: 3306
-            PMA_USER: laravel8
-            PMA_PASSWORD: 123456
+            PMA_USER: ${MYSQL_USER}
+            PMA_PASSWORD: ${MYSQL_PASSWORD}
         networks:
             - app-network
